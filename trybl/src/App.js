@@ -24,13 +24,10 @@ const App = () => {
     try {
       const response = await fetch(GOOGLE_SHEET_URL, {
         method: "POST",
+        mode: 'no-cors',
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, answer: selectedAnswer })
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to submit response");
-      }
 
       setSubmitted(true);
     } catch (error) {
