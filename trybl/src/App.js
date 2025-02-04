@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const GOOGLE_SHEET_URL = "https://script.google.com/a/macros/xtzesports.com/s/AKfycbzXbKufU5zj5aNB_5M05QwW3H5DDkqjEzRpJ-PN6OAtYi1fdEGmrY1Mn3ckVYojErl3/exec"; // Replace with your script URL
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzCHa8Q01tO6byAzErSSqXveaD-WkI6YTr5wtygVQZPG5hIxCvvPnwI2Lw8d5PDDw/exec"; // Replace with your script URL
 
 const App = () => {
   const [username, setUsername] = useState(null);
