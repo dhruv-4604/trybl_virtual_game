@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+
+@font-face {
+  font-family: 'SF UI Display';
+  src: url('../public/fonts/SF-UI-Display-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SF UI Display';
+  src: url('../public/fonts/SF-UI-Display-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Black Han Sans';
+  src: url('../public/fonts/BlackHanSans-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
