@@ -147,7 +147,7 @@ const App = () => {
 
   const handleCloseModal = useCallback(() => {
     // Send message to parent window without closing modal
-    window.parent.postMessage("msgstring", "*");
+    window.parent.postMessage({ event: "closeQuestIframe", data: { } }, "*");
   }, []);
 
   const handleRevealQuestion = useCallback(() => {
