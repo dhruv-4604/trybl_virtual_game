@@ -16,6 +16,54 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(15);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
+  const handleTimeUp = useCallback(async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          answer: 'No Answer',
+          timerEnded: true
+        })
+      });
+
+      await response.json();
+      setTimeLeft(0);
+      setIsCorrect(false);
+      setSelectedAnswer('No Answer');
+      setHasSubmitted(false);
+    } catch (error) {
+      console.error("Error submitting time up:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username, isLoading, API_URL]);
+
+  useEffect(() => {
+    let timer;
+    if (isTimerRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setIsTimerRunning(false);
+            setShowModal(true);
+            setTimeout(() => handleTimeUp(), 0);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isTimerRunning, handleTimeUp]);
+
   useEffect(() => {
     const style = document.createElement('style');
     style.textContent = `
@@ -37,6 +85,7 @@ const App = () => {
           if (data.hasSubmitted) {
             setHasSubmitted(true);
             setIsCorrect(data.isCorrect);
+            setSelectedAnswer(data.answer);
             setShowModal(true);
           }
         } catch (error) {
@@ -59,23 +108,6 @@ const App = () => {
       setUsername(extractedUsername);
     }
   }, []);
-
-  useEffect(() => {
-    let timer;
-    if (isTimerRunning && timeLeft > 0) {
-      timer = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            handleTimeUp();
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [isTimerRunning]);
 
   const handleSubmit = useCallback(async () => {
     if (!selectedAnswer || isLoading) {
@@ -114,41 +146,14 @@ const App = () => {
   }, [selectedAnswer, isLoading, username]);
 
   const handleCloseModal = useCallback(() => {
-    setShowModal(false);
+    // Send message to parent window without closing modal
+    window.parent.postMessage("msgstring", "*");
   }, []);
 
   const handleRevealQuestion = useCallback(() => {
     setShowQuestion(true);
     setIsTimerRunning(true);
   }, []);
-
-  const handleTimeUp = useCallback(async () => {
-    if (timeLeft > 0) return;
-    setIsTimerRunning(false);
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(`${API_URL}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          answer: selectedAnswer || 'No Answer',
-          timerEnded: true
-        })
-      });
-
-      const data = await response.json();
-      setIsCorrect(false);
-      setShowModal(true);
-    } catch (error) {
-      console.error("Error submitting time up:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [username, selectedAnswer, timeLeft]);
 
   const styles = useMemo(() => ({
     mainContainer: {
@@ -539,25 +544,52 @@ const App = () => {
 
   const ResultModal = useCallback(() => {
     const getModalContent = () => {
-      if (hasSubmitted) {
-        return {
-          title: "You've Already Attempted This!",
-          subtitle: "You can only attempt this quiz once.",
-          image: "/times-up.png"
-        };
-      } else if (timeLeft === 0) {
+      // Case 1: Fresh timer expiration
+      if (!hasSubmitted && timeLeft === 0) {
         return {
           title: "Time's Up!",
           subtitle: "You didn't answer in time. Better luck next time!",
           image: "/times-up.png"
         };
-      } else {
+      }
+
+      // Case 2: Revisiting after previous attempts
+      if (hasSubmitted) {
+        if (selectedAnswer === 'No Answer') {
+          return {
+            title: "You've Attempted This Before!",
+            subtitle: "You didn't answer in time.",
+            image: "/times-up.png"
+          };
+        } else if (isCorrect) {
+          return {
+            title: "You've Already Answered This!",
+            subtitle: "Your previous answer was correct.",
+            image: "/tick.png"
+          };
+        } else {
+          return {
+            title: "You've Attempted This Before!",
+            subtitle: "Your last answer wasn't correct.",
+            image: "/wrong-tick.png"
+          };
+        }
+      }
+      
+      // Case 3: Fresh attempts with answers
+      if (isCorrect) {
         return {
-          title: isCorrect ? "Correct Answer" : "Incorrect Answer",
-          subtitle: isCorrect ? "You got it right! Well done." : "Oops! That's not the right answer.",
-          image: isCorrect ? "/tick.png" : "/wrong-tick.png"
+          title: "Correct Answer!",
+          subtitle: "You got it right! Well done.",
+          image: "/tick.png"
         };
       }
+      
+      return {
+        title: "Incorrect Answer!",
+        subtitle: "Oops! That wasn't the right answer.",
+        image: "/wrong-tick.png"
+      };
     };
 
     const content = getModalContent();
@@ -587,14 +619,14 @@ const App = () => {
           </div>
           <button 
             style={styles.modalButton}
-            onClick={() => {}}
+            onClick={handleCloseModal}
           >
             Done
           </button>
         </div>
       </>
     );
-  }, [hasSubmitted, timeLeft, isCorrect, showModal, styles]);
+  }, [hasSubmitted, timeLeft, isCorrect, showModal, styles, selectedAnswer, handleCloseModal]);
 
   const Loader = () => (
     <div style={styles.loader} />
@@ -628,7 +660,7 @@ const App = () => {
       
       <h1 style={styles.title}>TRYBL VIRTUAL GAMES</h1>
       
-      {!hasSubmitted && (
+      {!hasSubmitted ? (
         <div style={styles.cardWrapper}>
           <div style={styles.welcomeBox}>
             {!showQuestion ? (
@@ -680,6 +712,8 @@ const App = () => {
             )}
           </div>
         </div>
+      ) : (
+        <h2 style={{ color: 'white', textAlign: 'center' }}>You have already attempted this question.</h2>
       )}
       {isLoading && <Loader />}
       <ResultModal />
