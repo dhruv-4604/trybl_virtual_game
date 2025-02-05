@@ -13,7 +13,7 @@ const App = () => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(20);
+  const [timeLeft, setTimeLeft] = useState(15);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
@@ -471,13 +471,14 @@ const App = () => {
       borderRadius: '50%',
       animation: 'spin 1s linear infinite',
       zIndex: 1000,
+      margin: '0 auto',
     },
     submitButtonDisabled: {
       opacity: 0.7,
       cursor: 'not-allowed',
     },
     timerText: {
-      color: timeLeft <= 10 ? '#FF4444' : 'white',
+      color:'white',
       fontWeight: 'bold',
     },
   }), [timeLeft]);
