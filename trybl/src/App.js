@@ -66,14 +66,16 @@ const App = () => {
       timer = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
+            clearInterval(timer);
             handleTimeUp();
+            return 0;
           }
           return prev - 1;
         });
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [isTimerRunning, timeLeft]);
+  }, [isTimerRunning]);
 
   const handleSubmit = useCallback(async () => {
     if (!selectedAnswer || isLoading) {
@@ -121,6 +123,7 @@ const App = () => {
   }, []);
 
   const handleTimeUp = useCallback(async () => {
+    if (timeLeft > 0) return;
     setIsTimerRunning(false);
     setIsLoading(true);
 
@@ -145,7 +148,7 @@ const App = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [username, selectedAnswer]);
+  }, [username, selectedAnswer, timeLeft]);
 
   const styles = useMemo(() => ({
     mainContainer: {
