@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import './App.css';
 
 const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
@@ -13,6 +13,8 @@ const App = () => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [timeLeft, setTimeLeft] = useState(20);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   useEffect(() => {
     const style = document.createElement('style');
@@ -58,7 +60,22 @@ const App = () => {
     }
   }, []);
 
-  const handleSubmit = async () => {
+  useEffect(() => {
+    let timer;
+    if (isTimerRunning && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleTimeUp();
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [isTimerRunning, timeLeft]);
+
+  const handleSubmit = useCallback(async () => {
     if (!selectedAnswer || isLoading) {
       setError("Please select an option!");
       return;
@@ -92,13 +109,45 @@ const App = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedAnswer, isLoading, username]);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowModal(false);
-  };
+  }, []);
 
-  const styles = {
+  const handleRevealQuestion = useCallback(() => {
+    setShowQuestion(true);
+    setIsTimerRunning(true);
+  }, []);
+
+  const handleTimeUp = useCallback(async () => {
+    setIsTimerRunning(false);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`${API_URL}/submit`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username,
+          answer: selectedAnswer || 'No Answer',
+          timerEnded: true
+        })
+      });
+
+      const data = await response.json();
+      setIsCorrect(false);
+      setShowModal(true);
+    } catch (error) {
+      console.error("Error submitting time up:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [username, selectedAnswer]);
+
+  const styles = useMemo(() => ({
     mainContainer: {
       minHeight: '100vh',
       background: '#101112',
@@ -156,17 +205,14 @@ const App = () => {
       pointerEvents: 'none',
     },
     welcomeText: {
-      fontWeight: 'normal',
-      fontFamily: 'SF UI Display, sans-serif',
-      
       color: 'white',
       fontSize: '1.1rem',
       textAlign: 'center',
       marginBottom: '27px',
+      fontFamily: 'SF UI Display, sans-serif',
       fontWeight: 'bold',
     },
     characterContainer: {
-
       position: 'relative',
       borderRadius: '15px',
       padding: '20px',
@@ -206,23 +252,20 @@ const App = () => {
       fontFamily: 'SF UI Display, sans-serif',
     },
     button: {
-      fontWeight: 'normal',
-      zIndex: 3,
       background: 'white',
       color: 'black',
       padding: '15px 30px',
       borderRadius: '25px',
       border: 'none',
       fontSize: '1.2rem',
-      fontWeight: 'bold',
       width: '90%',
       display: 'block',
       alignSelf: 'center',
       margin: '30px 10px 10px 10px',
       cursor: 'pointer',
-      marginTop: '30px',
       transition: 'transform 0.2s',
       fontFamily: 'SF UI Display, sans-serif',
+      fontWeight: 'bold',
     },
     confetti: {
       position: 'absolute',
@@ -255,8 +298,12 @@ const App = () => {
       width: '92%',
       height: '30px',
       textAlign: 'center',
-      marginBottom: '-12px',
+      marginBottom: '-5px',
       zIndex: 2,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '8px',
     },
     cardWrapper: {
       position: 'relative',
@@ -267,9 +314,8 @@ const App = () => {
       alignItems: 'center',
     },
     questionCard: {
-      
       borderRadius: '10px',
-      padding: '14px 00px',
+      padding: '14px 0px',
       width: '100%',
       boxSizing: 'border-box',
     },
@@ -430,9 +476,13 @@ const App = () => {
       opacity: 0.7,
       cursor: 'not-allowed',
     },
-  };
+    timerText: {
+      color: timeLeft <= 10 ? '#FF4444' : 'white',
+      fontWeight: 'bold',
+    },
+  }), [timeLeft]);
 
-  const renderQuestionCard = () => (
+  const renderQuestionCard = useCallback(() => (
     <div style={styles.questionCard}>
       <img 
         src="/question.svg" 
@@ -481,19 +531,27 @@ const App = () => {
         {isLoading ? "Submitting..." : "Submit Answer"}
       </button>
     </div>
-  );
+  ), [selectedAnswer, error, isLoading, styles, handleSubmit]);
 
-  const ResultModal = () => {
+  const ResultModal = useCallback(() => {
     const getModalContent = () => {
       if (hasSubmitted) {
         return {
-          title: isCorrect ? "You've Already Answered This!" : "You've Attempted This Before!",
-          subtitle: isCorrect ? "Your previous answer was correct." : "Your last answer wasn't correct.",
+          title: "You've Already Attempted This!",
+          subtitle: "You can only attempt this quiz once.",
+          image: "/times-up.png"
+        };
+      } else if (timeLeft === 0) {
+        return {
+          title: "Time's Up!",
+          subtitle: "You didn't answer in time. Better luck next time!",
+          image: "/times-up.png"
         };
       } else {
         return {
           title: isCorrect ? "Correct Answer" : "Incorrect Answer",
           subtitle: isCorrect ? "You got it right! Well done." : "Oops! That's not the right answer.",
+          image: isCorrect ? "/tick.png" : "/wrong-tick.png"
         };
       }
     };
@@ -513,8 +571,8 @@ const App = () => {
           ...(showModal ? styles.modalVisible : {})
         }}>
           <img 
-            src={isCorrect ? "/tick.png" : "/wrong-tick.png"}
-            alt={isCorrect ? "Success" : "Incorrect"}
+            src={content.image}
+            alt="Result Icon"
             style={styles.tickIcon}
           />
           <div style={styles.modalTitle}>
@@ -525,13 +583,14 @@ const App = () => {
           </div>
           <button 
             style={styles.modalButton}
+            onClick={() => {}}
           >
             Done
           </button>
         </div>
       </>
     );
-  };
+  }, [hasSubmitted, timeLeft, isCorrect, showModal, styles]);
 
   const Loader = () => (
     <div style={styles.loader} />
@@ -568,7 +627,14 @@ const App = () => {
       {!hasSubmitted && (
         <div style={styles.cardWrapper}>
           <div style={styles.welcomeBox}>
-            Welcome to the qualifiers
+            {!showQuestion ? (
+              'Welcome to the qualifiers'
+            ) : (
+              <>
+                <img src="/timer.png" alt="Timer" style={{ width: '27px', height: '27px' }} />
+                <span style={styles.timerText}>{timeLeft} SEC</span>
+              </>
+            )}
           </div>
           
           <div style={styles.card}>
@@ -600,7 +666,7 @@ const App = () => {
 
                 <button 
                   style={styles.button}
-                  onClick={() => setShowQuestion(true)}
+                  onClick={handleRevealQuestion}
                 >
                   Reveal Question
                 </button>
@@ -617,4 +683,4 @@ const App = () => {
   );
 };
 
-export default App;
+export default React.memo(App);
