@@ -692,7 +692,7 @@ const App = () => {
 
                 <div style={styles.infoCard}>
                   <div style={styles.infoText}>
-                    • <span style={{ color: 'white', fontWeight: 'bold' }}>8 Players</span> Will Be Chosen To Participate In The <span style={{ color: 'white', fontWeight: 'bold' }}>Trybl Gameshow Live Edition.</span>
+                    • <span style={{ color: 'white', fontWeight: 'bold' }}>8 Players</span> Will Be Chosen To Participate In The <span style={{ color: 'white', fontWeight: 'bold' }}>Trybl Gameshow Finals.</span>
                   </div>
                   
                   <div style={styles.infoText}>
