@@ -147,7 +147,7 @@ const App = () => {
 
   const handleCloseModal = useCallback(() => {
     // Send message to parent window without closing modal
-    window.parent.postMessage({ event: "closeQuestIframe", data: { } }, "*");
+    window.parent.postMessage({ event: "closeQuestIframe", data: {} }, "*");
   }, []);
 
   const handleRevealQuestion = useCallback(() => {
@@ -499,10 +499,10 @@ const App = () => {
         style={styles.questionHeaderImage}
       />
       <h2 style={styles.questionText}>
-        Which Of The Following Is The Most Popular Esports Game Globally As Of 2025?
+        Which artist is performing at the halftime show of this year's Super Bowl?
       </h2>
       
-      {['League of Legends', 'Valorant', 'Dota 2', 'Counter-Strike: Global Offensive'].map((option, index) => (
+      {['Drake', 'Taylor Swift', 'Kendrick Lamar', 'Ye (Kanye West)'].map((option, index) => (
         <button
           key={index}
           style={{
@@ -658,7 +658,7 @@ const App = () => {
         style={styles.confetti}
       />
       
-      <h1 style={styles.title}>TRYBL VIRTUAL GAMES</h1>
+      <h1 style={styles.title}>TRYBL<br></br> GAMESHOW</h1>
       
       {!hasSubmitted ? (
         <div style={styles.cardWrapper}>
@@ -692,7 +692,7 @@ const App = () => {
 
                 <div style={styles.infoCard}>
                   <div style={styles.infoText}>
-                    • <span style={{ color: 'white', fontWeight: 'bold' }}>10 Players</span> Will Be Chosen To Participate In The <span style={{ color: 'white', fontWeight: 'bold' }}>Trybl Virtual Games Live Edition.</span>
+                    • <span style={{ color: 'white', fontWeight: 'bold' }}>8 Players</span> Will Be Chosen To Participate In The <span style={{ color: 'white', fontWeight: 'bold' }}>Trybl Virtual Games Live Edition.</span>
                   </div>
                   
                   <div style={styles.infoText}>
