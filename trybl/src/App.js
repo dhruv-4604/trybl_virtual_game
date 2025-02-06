@@ -470,7 +470,7 @@ const App = () => {
     loader: {
       position: 'fixed',
       top: '50%',
-      left: '50%',
+      left: '40%',
       transform: 'translate(-50%, -50%)',
       width: '40px',
       height: '40px',
