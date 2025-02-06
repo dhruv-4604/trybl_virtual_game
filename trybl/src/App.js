@@ -696,7 +696,7 @@ const App = () => {
                   </div>
                   
                   <div style={styles.infoText}>
-                    • Answer The Question And Follow Us On Socials For More Updates.
+                    • Answer the question ahead within the time time limit. Follow us on socials for more updates.
                   </div>
                 </div>
 
