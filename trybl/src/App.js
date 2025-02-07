@@ -13,7 +13,7 @@ const App = () => {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [timeLeft, setTimeLeft] = useState(15);
+  const [timeLeft, setTimeLeft] = useState(40);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
   const handleTimeUp = useCallback(async () => {
@@ -696,7 +696,7 @@ const App = () => {
                   </div>
                   
                   <div style={styles.infoText}>
-                    • Answer the question ahead within the time time limit. Follow us on socials for more updates.
+                    • Answer the question ahead within the time time limit. Follow us on socials for more updates.
                   </div>
                 </div>
 
